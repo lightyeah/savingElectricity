@@ -18,7 +18,7 @@ Dialog::Dialog(QWidget *parent) :
     initPort();
     initData();
     portWrite->open(QIODevice::ReadWrite);
-    portRead->open(QIODevice::ReadOnly);
+//    portRead->open(QIODevice::ReadOnly);
     connect(portWrite,&QSerialPort::readyRead,this,&Dialog::getData);
 }
 
@@ -31,11 +31,11 @@ void Dialog::initPort()
     portWrite->setParity(QSerialPort::EvenParity);
     portWrite->setStopBits(QSerialPort::OneStop);
     portWrite->setFlowControl(QSerialPort::NoFlowControl);
-    portRead->setBaudRate(QSerialPort::Baud9600);
-    portRead->setDataBits(QSerialPort::Data8);
-    portRead->setParity(QSerialPort::NoParity);
-    portRead->setStopBits(QSerialPort::OneStop);
-    portRead->setFlowControl(QSerialPort::NoFlowControl);
+//    portRead->setBaudRate(QSerialPort::Baud9600);
+//    portRead->setDataBits(QSerialPort::Data8);
+//    portRead->setParity(QSerialPort::NoParity);
+//    portRead->setStopBits(QSerialPort::OneStop);
+//    portRead->setFlowControl(QSerialPort::NoFlowControl);
 }
 
 void Dialog::initData()
@@ -58,12 +58,12 @@ void Dialog::on_launch_clicked()
 {
     //    QByteArray data=ui->writePortContent->text().toLocal8Bit();
     //    portWrite->write(data.fromHex(data));
-//    getVoltage();
+    getVoltage();
 //    getCurrent();
 //    getEffectivePower();
 //    getReactivePower();
 //    getApparentPower();
-    getPowerFactor();
+//    getPowerFactor();
 }
 
 void Dialog::getData()
@@ -75,7 +75,18 @@ void Dialog::getData()
         ++m_data.countVoltage;
         if(m_data.countVoltage>=BYTE_NUMBER_VOLTAGE)
         {
-            ui->readPortContent->setText(QString(m_data.voltage.toHex()));
+            QByteArray AL=m_data.voltage.mid(14,1);
+            QByteArray AH=m_data.voltage.mid(15,1);
+            double A=(AH.toHex().toFloat()-33)*10+(AL.toHex().toFloat()-33)*0.1;
+            QByteArray BL=m_data.voltage.mid(16,1);
+            QByteArray BH=m_data.voltage.mid(17,1);
+            double B=(BH.toHex().toFloat()-33)*10+(BL.toHex().toFloat()-33)*0.1;
+            QByteArray CL=m_data.voltage.mid(18,1);
+            QByteArray CH=m_data.voltage.mid(19,1);
+            double C=(CH.toHex().toFloat()-33)*10+(CL.toHex().toFloat()-33)*0.1;
+
+
+            ui->readPortContent->setText(QString("%1").arg(C,0));
             m_data.countVoltage=0;
             m_data.voltage.clear();
         }
