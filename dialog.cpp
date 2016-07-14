@@ -2,11 +2,11 @@
 #include "ui_dialog.h"
 #include <QString>
 #define BYTE_NUMBER_VOLTAGE 22
-#define BYTE_NUMBER_CURRENT 22
-#define BYTE_NUMBER_EFFECTIVE_POWER
-#define BYTE_NUMBER_REACTIVE_POWER
-#define BYTE_NUMBER_APPRENT_POWER
-#define BYTE_NUMBER_POWER_FACTOR
+#define BYTE_NUMBER_CURRENT 25
+#define BYTE_NUMBER_EFFECTIVE_POWER 28
+#define BYTE_NUMBER_REACTIVE_POWER 28
+#define BYTE_NUMBER_APPRENT_POWER 28
+#define BYTE_NUMBER_POWER_FACTOR 24
 
 Dialog::Dialog(QWidget *parent) :
     QDialog(parent),
@@ -58,7 +58,12 @@ void Dialog::on_launch_clicked()
 {
     //    QByteArray data=ui->writePortContent->text().toLocal8Bit();
     //    portWrite->write(data.fromHex(data));
-    getVoltage();
+//    getVoltage();
+//    getCurrent();
+//    getEffectivePower();
+//    getReactivePower();
+//    getApparentPower();
+    getPowerFactor();
 }
 
 void Dialog::getData()
@@ -140,5 +145,36 @@ void Dialog::getVoltage()
 
 void Dialog::getCurrent()
 {
+    QByteArray data(QString("68aaaaaaaaaaaa68110433323535b016").toLocal8Bit());
+    portWrite->write(data.fromHex(data));
+    m_readType=ReadCurrent;
 
+}
+
+void Dialog::getEffectivePower()
+{
+    QByteArray data(QString("68aaaaaaaaaaaa68110433323635b116").toLocal8Bit());
+    portWrite->write(data.fromHex(data));
+    m_readType=ReadEffectivePower;
+}
+
+void Dialog::getReactivePower()
+{
+    QByteArray data(QString("68aaaaaaaaaaaa68110433323735b216").toLocal8Bit());
+    portWrite->write(data.fromHex(data));
+    m_readType=ReadReactivePower;
+}
+
+void Dialog::getApparentPower()
+{
+    QByteArray data(QString("68aaaaaaaaaaaa68110433323835b316").toLocal8Bit());
+    portWrite->write(data.fromHex(data));
+    m_readType=ReadApparentPower;
+}
+
+void Dialog::getPowerFactor()
+{
+    QByteArray data(QString("68aaaaaaaaaaaa68110433323935b416").toLocal8Bit());
+    portWrite->write(data.fromHex(data));
+    m_readType=ReadPowerFactor;
 }
