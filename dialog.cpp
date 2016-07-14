@@ -40,11 +40,12 @@ void Dialog::on_launch_clicked()
 {
     //    portWrite->setPortName(ui->writePortNumber->text());
     //    portRead->setPortName(ui->readPortNumber->text());
-    portWrite->write(ui->writePortContent->text().toLocal8Bit());
+    QByteArray data=ui->writePortContent->text().toLocal8Bit();
+    portWrite->write(data.fromHex(data));
 }
 
 void Dialog::getData()
 {
     QByteArray data=portRead->readAll();
-    ui->readPortContent->setText(QString(data));
+    ui->readPortContent->setText(QString(data.toHex()));
 }
