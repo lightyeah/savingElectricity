@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>731</width>
-    <height>403</height>
+    <width>866</width>
+    <height>561</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -127,8 +127,26 @@
     <string>发射</string>
    </property>
   </widget>
+  <widget class="QCustomPlot" name="dataPlot" native="true">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>260</y>
+     <width>401</width>
+     <height>191</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

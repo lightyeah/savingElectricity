@@ -13,17 +13,15 @@ Dialog::Dialog(QWidget *parent) :
     ui(new Ui::Dialog)
 {
     ui->setupUi(this);
-    portWrite=new QSerialPort(this);
-    portRead=new QSerialPort(this);
     initPort();
     initData();
-    portWrite->open(QIODevice::ReadWrite);
-    //    portRead->open(QIODevice::ReadOnly);
-    connect(portWrite,&QSerialPort::readyRead,this,&Dialog::getData);
+    initConnections();
 }
 
 void Dialog::initPort()
 {
+    portWrite=new QSerialPort(this);
+    portRead=new QSerialPort(this);
     portWrite->setPortName(ui->writePortNumber->text());
     portRead->setPortName(ui->readPortNumber->text());
     portWrite->setBaudRate(QSerialPort::Baud2400);
@@ -31,11 +29,9 @@ void Dialog::initPort()
     portWrite->setParity(QSerialPort::EvenParity);
     portWrite->setStopBits(QSerialPort::OneStop);
     portWrite->setFlowControl(QSerialPort::NoFlowControl);
-    //    portRead->setBaudRate(QSerialPort::Baud9600);
-    //    portRead->setDataBits(QSerialPort::Data8);
-    //    portRead->setParity(QSerialPort::NoParity);
-    //    portRead->setStopBits(QSerialPort::OneStop);
-    //    portRead->setFlowControl(QSerialPort::NoFlowControl);
+    portWrite->open(QIODevice::ReadWrite);
+    connect(portWrite,&QSerialPort::readyRead,this,&Dialog::getData);
+
 }
 
 void Dialog::initData()
@@ -49,6 +45,21 @@ void Dialog::initData()
     m_readType=NoneType;
 }
 
+void Dialog::initDataToPlot()
+{
+
+}
+
+void Dialog::initConnections()
+{
+    connect(this,&Dialog::voltageDataGot,this,&Dialog::plotVoltage);
+    connect(this,&Dialog::currentDataGot,this,&Dialog::plotCurrent);
+    connect(this,&Dialog::effectivePowerDataGot,this,&Dialog::plotEffectivePower);
+    connect(this,&Dialog::reactivePowerDataGot,this,&Dialog::plotReactivePower);
+    connect(this,&Dialog::apparentPowerDataGot,this,&Dialog::plotApparentPower);
+    connect(this,&Dialog::powerFactorDataGot,this,&Dialog::plotPowerFactor);
+}
+
 Dialog::~Dialog()
 {
     delete ui;
@@ -59,11 +70,11 @@ void Dialog::on_launch_clicked()
     //    QByteArray data=ui->writePortContent->text().toLocal8Bit();
     //    portWrite->write(data.fromHex(data));
     //    getVoltage();
-//    getCurrent();
+    //    getCurrent();
     //    getEffectivePower();
     //    getReactivePower();
     //    getApparentPower();
-        getPowerFactor();
+    getPowerFactor();
 }
 
 void Dialog::getData()
@@ -77,13 +88,14 @@ void Dialog::getData()
         {
             QByteArray AL=m_data.voltage.mid(14,1);
             QByteArray AH=m_data.voltage.mid(15,1);
-            double A=(AH.toHex().toFloat()-33)*10+(AL.toHex().toFloat()-33)*0.1;
+            float A=(AH.toHex().toFloat()-33)*10+(AL.toHex().toFloat()-33)*0.1;
             QByteArray BL=m_data.voltage.mid(16,1);
             QByteArray BH=m_data.voltage.mid(17,1);
-            double B=(BH.toHex().toFloat()-33)*10+(BL.toHex().toFloat()-33)*0.1;
+            float B=(BH.toHex().toFloat()-33)*10+(BL.toHex().toFloat()-33)*0.1;
             QByteArray CL=m_data.voltage.mid(18,1);
             QByteArray CH=m_data.voltage.mid(19,1);
-            double C=(CH.toHex().toFloat()-33)*10+(CL.toHex().toFloat()-33)*0.1;
+            float C=(CH.toHex().toFloat()-33)*10+(CL.toHex().toFloat()-33)*0.1;
+            emit voltageDataGot(A,B,C);
             ui->readPortContent->setText(QString("%1").arg(C,0));
             m_data.countVoltage=0;
             m_data.voltage.clear();
@@ -214,6 +226,36 @@ void Dialog::getData()
     }
 
 
+
+}
+
+void Dialog::plotVoltage(float A, float B, float C)
+{
+
+}
+
+void Dialog::plotCurrent(float A, float B, float C)
+{
+
+}
+
+void Dialog::plotEffectivePower(float A, float B, float C, float S)
+{
+
+}
+
+void Dialog::plotReactivePower(float A, float B, float C, float S)
+{
+
+}
+
+void Dialog::plotApparentPower(float A, float B, float C, float S)
+{
+
+}
+
+void Dialog::plotPowerFactor(float A, float B, float C, float S)
+{
 
 }
 
