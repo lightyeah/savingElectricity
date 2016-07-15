@@ -4,6 +4,8 @@
 #include <QDialog>
 #include <QtSerialPort/QSerialPort>
 #include <QVector>
+#include <qcustomplot.h>
+typedef double datatype;
 namespace Ui {
 class Dialog;
 }
@@ -25,10 +27,11 @@ struct dataToRead
 };
 struct dataToPlot
 {
-    QVector<float> A;
-    QVector<float> B;
-    QVector<float> C;
-    QVector<float> S;
+    QVector<datatype> A;
+    QVector<datatype> B;
+    QVector<datatype> C;
+    QVector<datatype> S;
+    QVector<datatype> keys;
 };
 
 enum readType
@@ -50,7 +53,7 @@ public:
     explicit Dialog(QWidget *parent = 0);
     void initPort();
     void initData();
-    void initDataToPlot();
+    void initPlotStyle();
     void initConnections();
     void getVoltage();
     void getCurrent();
@@ -58,25 +61,32 @@ public:
     void getReactivePower();
     void getApparentPower();
     void getPowerFactor();
+    void insertData(datatype data, QVector<datatype>& dataVector,QVector<datatype>& keys);
     ~Dialog();
 
 private slots:
     void on_launch_clicked();
-    void getData();
-    void plotVoltage(float A,float B,float C);
-    void plotCurrent(float A,float B,float C);
-    void plotEffectivePower(float A,float B,float C,float S);
-    void plotReactivePower(float A,float B,float C,float S);
-    void plotApparentPower(float A,float B,float C,float S);
-    void plotPowerFactor(float A,float B,float C,float S);
+    void parseData();
+    void getAndPlotData();
+    //    void plotVoltage(float A,float B,float C);
+    //    void plotCurrent(float A,float B,float C);
+    //    void plotEffectivePower(float A,float B,float C,float S);
+    //    void plotReactivePower(float A,float B,float C,float S);
+    //    void plotApparentPower(float A,float B,float C,float S);
+    //    void plotPowerFactor(float A,float B,float C,float S);
+
+
+    void on_stopPlot_clicked();
+
+    void on_startPlot_clicked();
 
 signals:
-    void voltageDataGot(float A,float B,float C);
-    void currentDataGot(float A,float B,float C);
-    void effectivePowerDataGot(float A,float B,float C,float S);
-    void reactivePowerDataGot(float A,float B,float C,float S);
-    void apparentPowerDataGot(float A,float B,float C,float S);
-    void powerFactorDataGot(float A,float B,float C,float S);
+    void voltageDataGot(datatype A,datatype B,datatype C);
+    void currentDataGot(datatype A,datatype B,datatype C);
+    void effectivePowerDataGot(datatype A,datatype B,datatype C,datatype S);
+    void reactivePowerDataGot(datatype A,datatype B,datatype C,datatype S);
+    void apparentPowerDataGot(datatype A,datatype B,datatype C,datatype S);
+    void powerFactorDataGot(datatype A,datatype B,datatype C,datatype S);
 
 
 private:
@@ -86,6 +96,12 @@ private:
     dataToRead m_data;
     readType m_readType;
     dataToPlot m_voltage;
+    dataToPlot m_current;
+    dataToPlot m_effectivePower;
+    dataToPlot m_reactivePower;
+    dataToPlot m_apparentPower;
+    dataToPlot m_powerFactor;
+
 
 
 

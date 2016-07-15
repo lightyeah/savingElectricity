@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>866</width>
-    <height>561</height>
+    <width>1134</width>
+    <height>583</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,33 +36,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>COM10</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>80</y>
-     <width>72</width>
-     <height>15</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>读串口</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="readPortNumber">
-   <property name="geometry">
-    <rect>
-     <x>90</x>
-     <y>80</y>
-     <width>113</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>COM8</string>
+    <string>COM13</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
@@ -94,8 +68,8 @@
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>240</x>
-     <y>80</y>
+     <x>510</x>
+     <y>30</y>
      <width>72</width>
      <height>15</height>
     </rect>
@@ -107,8 +81,8 @@
   <widget class="QLineEdit" name="readPortContent">
    <property name="geometry">
     <rect>
-     <x>340</x>
-     <y>80</y>
+     <x>610</x>
+     <y>30</y>
      <width>113</width>
      <height>23</height>
     </rect>
@@ -117,8 +91,8 @@
   <widget class="QPushButton" name="launch">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>150</y>
+     <x>760</x>
+     <y>30</y>
      <width>89</width>
      <height>24</height>
     </rect>
@@ -127,15 +101,175 @@
     <string>发射</string>
    </property>
   </widget>
-  <widget class="QCustomPlot" name="dataPlot" native="true">
+  <widget class="QCustomPlot" name="PlotA" native="true">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>260</y>
-     <width>401</width>
+     <x>230</x>
+     <y>160</y>
+     <width>261</width>
      <height>191</height>
     </rect>
    </property>
+  </widget>
+  <widget class="QCustomPlot" name="PlotB" native="true">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>160</y>
+     <width>241</width>
+     <height>191</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QCustomPlot" name="PlotC" native="true">
+   <property name="geometry">
+    <rect>
+     <x>850</x>
+     <y>160</y>
+     <width>251</width>
+     <height>191</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelA">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>120</y>
+     <width>81</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Times New Roman</family>
+     <pointsize>24</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>A相</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelB">
+   <property name="geometry">
+    <rect>
+     <x>650</x>
+     <y>124</y>
+     <width>81</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Times New Roman</family>
+     <pointsize>24</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>B相</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelC">
+   <property name="geometry">
+    <rect>
+     <x>960</x>
+     <y>120</y>
+     <width>101</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Times New Roman</family>
+     <pointsize>24</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>C相</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="startPlot">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>80</y>
+     <width>93</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>开始绘图</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="stopPlot">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>80</y>
+     <width>93</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>停止绘图</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>170</y>
+     <width>121</width>
+     <height>171</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QRadioButton" name="radioButtonVoltage">
+      <property name="text">
+       <string>电压</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QRadioButton" name="radioButtonCurrent">
+      <property name="text">
+       <string>电流</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QRadioButton" name="radioButtonEffective">
+      <property name="text">
+       <string>有效功率</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QRadioButton" name="radioButtonReactive">
+      <property name="text">
+       <string>无效功率</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QRadioButton" name="radioButtonApparent">
+      <property name="text">
+       <string>视在功率</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QRadioButton" name="radioButtonPowerFactor">
+      <property name="text">
+       <string>功率因素</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
