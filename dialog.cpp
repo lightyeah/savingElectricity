@@ -19,7 +19,6 @@ Dialog::Dialog(QWidget *parent) :
     initPort();
     initData();
     initPlotStyle();
-    //    initConnections();
     connect(timer,&QTimer::timeout,this,&Dialog::getAndPlotData);
     timer->start(1000);
 }
@@ -27,9 +26,7 @@ Dialog::Dialog(QWidget *parent) :
 void Dialog::initPort()
 {
     portWrite=new QSerialPort(this);
-    portRead=new QSerialPort(this);
     portWrite->setPortName(ui->writePortNumber->text());
-    //    portRead->setPortName(ui->readPortNumber->text());
     portWrite->setBaudRate(QSerialPort::Baud2400);
     portWrite->setDataBits(QSerialPort::Data8);
     portWrite->setParity(QSerialPort::EvenParity);
@@ -53,28 +50,6 @@ void Dialog::initData()
 
 void Dialog::initPlotStyle()
 {
-    //m_voltage.A.resize(50);
-    //m_voltage.B.resize(50);
-    //m_voltage.C.resize(50);
-    //m_current.A.resize(50);
-    //m_current.B.resize(50);
-    //m_current.C.resize(50);
-    //m_effectivePower.A.resize(50);
-    //m_effectivePower.B.resize(50);
-    //m_effectivePower.C.resize(50);
-    //m_effectivePower.S.resize(50);
-    //m_reactivePower.A.resize(50);
-    //m_reactivePower.B.resize(50);
-    //m_reactivePower.C.resize(50);
-    //m_reactivePower.S.resize(50);
-    //m_apparentPower.A.resize(50);
-    //m_apparentPower.B.resize(50);
-    //m_apparentPower.C.resize(50);
-    //m_apparentPower.S.resize(50);
-    //m_powerFactor.A.resize(50);
-    //m_powerFactor.B.resize(50);
-    //m_powerFactor.C.resize(50);
-    //m_powerFactor.S.resize(50);
     ui->PlotA->addGraph();
     ui->PlotA->graph(0)->setPen(QPen(Qt::blue));
     ui->PlotA->xAxis->setRange(0,51);
@@ -87,18 +62,8 @@ void Dialog::initPlotStyle()
     ui->PlotC->graph(0)->setPen(QPen(Qt::red));
     ui->PlotC->xAxis->setRange(0,51);
     ui->PlotC->yAxis->setRange(-1,270);
-
 }
 
-void Dialog::initConnections()
-{
-    //    connect(this,&Dialog::voltageDataGot,this,&Dialog::plotVoltage);
-    //    connect(this,&Dialog::currentDataGot,this,&Dialog::plotCurrent);
-    //    connect(this,&Dialog::effectivePowerDataGot,this,&Dialog::plotEffectivePower);
-    //    connect(this,&Dialog::reactivePowerDataGot,this,&Dialog::plotReactivePower);
-    //    connect(this,&Dialog::apparentPowerDataGot,this,&Dialog::plotApparentPower);
-    //    connect(this,&Dialog::powerFactorDataGot,this,&Dialog::plotPowerFactor);
-}
 
 Dialog::~Dialog()
 {
@@ -129,7 +94,6 @@ void Dialog::parseData()
             QByteArray CL=m_data.voltage.mid(18,1);
             QByteArray CH=m_data.voltage.mid(19,1);
             datatype C=(CH.toHex().toFloat()-33)*10+(CL.toHex().toFloat()-33)*0.1;
-            //            emit voltageDataGot(A,B,C);
             ui->readPortContent->setText(QString("%1").arg(A,0));
             insertData(A,m_voltage.A,m_voltage.keys);
             insertData(B,m_voltage.B,m_voltage.keys);
@@ -155,8 +119,10 @@ void Dialog::parseData()
             QByteArray CM=m_data.current.mid(21,1);
             QByteArray CH=m_data.current.mid(22,1);
             datatype C=(CH.toHex().toFloat()-33)*10+(CM.toHex().toFloat()-33)*0.1+(CL.toHex().toFloat()-33)*0.001;
-            //            emit currentDataGot(A,B,C);
             ui->readPortContent->setText(QString("%1").arg(A,0));
+            insertData(A,m_current.A,m_current.keys);
+            insertData(B,m_current.B,m_current.keys);
+            insertData(C,m_current.C,m_current.keys);
             m_data.countCurrent=0;
             m_data.current.clear();
         }
@@ -182,8 +148,11 @@ void Dialog::parseData()
             QByteArray CM=m_data.effectivePower.mid(24,1);
             QByteArray CH=m_data.effectivePower.mid(25,1);
             datatype C=(CH.toHex().toFloat()-33)+(CM.toHex().toFloat()-33)*0.01+(CL.toHex().toFloat()-33)*0.0001;
-            //            emit effectivePowerDataGot(A,B,C,S);
             ui->readPortContent->setText(QString("%1").arg(A,0));
+            insertData(A,m_effectivePower.A,m_effectivePower.keys);
+            insertData(B,m_effectivePower.B,m_effectivePower.keys);
+            insertData(C,m_effectivePower.C,m_effectivePower.keys);
+            insertData(S,m_effectivePower.S,m_effectivePower.keys);
             m_data.countEffectivePower=0;
             m_data.effectivePower.clear();
         }
@@ -209,37 +178,43 @@ void Dialog::parseData()
             QByteArray CM=m_data.reactivePower.mid(24,1);
             QByteArray CH=m_data.reactivePower.mid(25,1);
             datatype C=(CH.toHex().toFloat()-33)+(CM.toHex().toFloat()-33)*0.01+(CL.toHex().toFloat()-33)*0.0001;
-            //            emit reactivePowerDataGot(A,B,C,S);
             ui->readPortContent->setText(QString("%1").arg(A,0));
+            insertData(A,m_reactivePower.A,m_reactivePower.keys);
+            insertData(B,m_reactivePower.B,m_reactivePower.keys);
+            insertData(C,m_reactivePower.C,m_reactivePower.keys);
+            insertData(S,m_reactivePower.S,m_reactivePower.keys);
             m_data.countReactivePower=0;
             m_data.reactivePower.clear();
         }
         break;
     case ReadApparentPower:
-        m_data.apprentPower.append(portWrite->readAll());
+        m_data.apparentPower.append(portWrite->readAll());
         ++m_data.countApparentPower;
         if(m_data.countApparentPower>=BYTE_NUMBER_APPRENT_POWER)
         {
-            QByteArray SL=m_data.apprentPower.mid(14,1);
-            QByteArray SM=m_data.apprentPower.mid(15,1);
-            QByteArray SH=m_data.apprentPower.mid(16,1);
+            QByteArray SL=m_data.apparentPower.mid(14,1);
+            QByteArray SM=m_data.apparentPower.mid(15,1);
+            QByteArray SH=m_data.apparentPower.mid(16,1);
             datatype S=(SH.toHex().toFloat()-33)+(SM.toHex().toFloat()-33)*0.01+(SL.toHex().toFloat()-33)*0.0001;
-            QByteArray AL=m_data.apprentPower.mid(17,1);
-            QByteArray AM=m_data.apprentPower.mid(18,1);
-            QByteArray AH=m_data.apprentPower.mid(19,1);
+            QByteArray AL=m_data.apparentPower.mid(17,1);
+            QByteArray AM=m_data.apparentPower.mid(18,1);
+            QByteArray AH=m_data.apparentPower.mid(19,1);
             datatype A=(AH.toHex().toFloat()-33)+(AM.toHex().toFloat()-33)*0.01+(AL.toHex().toFloat()-33)*0.0001;
-            QByteArray BL=m_data.apprentPower.mid(20,1);
-            QByteArray BM=m_data.apprentPower.mid(21,1);
-            QByteArray BH=m_data.apprentPower.mid(22,1);
+            QByteArray BL=m_data.apparentPower.mid(20,1);
+            QByteArray BM=m_data.apparentPower.mid(21,1);
+            QByteArray BH=m_data.apparentPower.mid(22,1);
             datatype B=(BH.toHex().toFloat()-33)+(BM.toHex().toFloat()-33)*0.01+(BL.toHex().toFloat()-33)*0.0001;
-            QByteArray CL=m_data.apprentPower.mid(23,1);
-            QByteArray CM=m_data.apprentPower.mid(24,1);
-            QByteArray CH=m_data.apprentPower.mid(25,1);
+            QByteArray CL=m_data.apparentPower.mid(23,1);
+            QByteArray CM=m_data.apparentPower.mid(24,1);
+            QByteArray CH=m_data.apparentPower.mid(25,1);
             datatype C=(CH.toHex().toFloat()-33)+(CM.toHex().toFloat()-33)*0.01+(CL.toHex().toFloat()-33)*0.0001;
-            //            emit apparentPowerDataGot(A,B,C,S);
             ui->readPortContent->setText(QString("%1").arg(A,0));
+            insertData(A,m_apparentPower.A,m_apparentPower.keys);
+            insertData(B,m_apparentPower.B,m_apparentPower.keys);
+            insertData(C,m_apparentPower.C,m_apparentPower.keys);
+            insertData(S,m_apparentPower.S,m_apparentPower.keys);
             m_data.countApparentPower=0;
-            m_data.apprentPower.clear();
+            m_data.apparentPower.clear();
         }
         break;
     case ReadPowerFactor:
@@ -259,66 +234,29 @@ void Dialog::parseData()
             QByteArray CL=m_data.powerFactor.mid(20,1);
             QByteArray CH=m_data.powerFactor.mid(21,1);
             datatype C=(CH.toHex().toFloat()-33)*0.1+(CL.toHex().toFloat()-33)*0.001;
-            //            emit powerFactorDataGot(A,B,C,S);
             ui->readPortContent->setText(QString("%1").arg(A,0));
+            insertData(A,m_powerFactor.A,m_powerFactor.keys);
+            insertData(B,m_powerFactor.B,m_powerFactor.keys);
+            insertData(C,m_powerFactor.C,m_powerFactor.keys);
+            insertData(S,m_powerFactor.S,m_powerFactor.keys);
             m_data.countPowerFactor=0;
             m_data.powerFactor.clear();
         }
         break;
     }
-
-
-
 }
 
 void Dialog::getAndPlotData()
 {
     getVoltage();
-//    getCurrent();
-//    getEffectivePower();
-//    getReactivePower();
-//    getApparentPower();
-//    getPowerFactor();
-//    if(ui->startPlot->isEnabled())
-//    {
-        ui->PlotA->graph()->addData(m_voltage.keys,m_voltage.A);
-        ui->PlotB->graph()->addData(m_voltage.keys,m_voltage.B);
-        ui->PlotC->graph()->addData(m_voltage.keys,m_voltage.C);
-        ui->PlotA->replot();
-        ui->PlotB->replot();
-        ui->PlotC->replot();
-//    }
+    getCurrent();
+    getEffectivePower();
+    getReactivePower();
+    getApparentPower();
+    getPowerFactor();
+    whichToPlot();
+
 }
-
-//void Dialog::plotVoltage(float A, float B, float C)
-//{
-
-//}
-
-//void Dialog::plotCurrent(float A, float B, float C)
-//{
-
-//}
-
-//void Dialog::plotEffectivePower(float A, float B, float C, float S)
-//{
-
-//}
-
-//void Dialog::plotReactivePower(float A, float B, float C, float S)
-//{
-
-//}
-
-//void Dialog::plotApparentPower(float A, float B, float C, float S)
-//{
-
-//}
-
-//void Dialog::plotPowerFactor(float A, float B, float C, float S)
-//{
-
-//}
 
 void Dialog::getVoltage()
 {
@@ -361,6 +299,73 @@ void Dialog::getPowerFactor()
     QByteArray data(QString("68aaaaaaaaaaaa68110433323935b416").toLocal8Bit());
     portWrite->write(data.fromHex(data));
     m_readType=ReadPowerFactor;
+}
+
+void Dialog::whichToPlot()
+{
+    if(!(ui->startPlot->isEnabled()))
+    {
+        if (ui->radioButtonVoltage->isChecked())
+        {
+            ui->PlotA->graph()->addData(m_voltage.keys,m_voltage.A);
+            ui->PlotB->graph()->addData(m_voltage.keys,m_voltage.B);
+            ui->PlotC->graph()->addData(m_voltage.keys,m_voltage.C);
+            ui->PlotA->replot();
+            ui->PlotB->replot();
+            ui->PlotC->replot();
+            qDebug()<<"voltage"<<endl;
+        }
+        else if(ui->radioButtonCurrent->isChecked())
+        {
+            ui->PlotA->graph()->addData(m_current.keys,m_current.A);
+            ui->PlotB->graph()->addData(m_current.keys,m_current.B);
+            ui->PlotC->graph()->addData(m_current.keys,m_current.C);
+            ui->PlotA->replot();
+            ui->PlotB->replot();
+            ui->PlotC->replot();
+            qDebug()<<"current"<<endl;
+        }
+        else if(ui->radioButtonEffective->isChecked())
+        {
+            ui->PlotA->graph()->addData(m_effectivePower.keys,m_effectivePower.A);
+            ui->PlotB->graph()->addData(m_effectivePower.keys,m_effectivePower.B);
+            ui->PlotC->graph()->addData(m_effectivePower.keys,m_effectivePower.C);
+            ui->PlotA->replot();
+            ui->PlotB->replot();
+            ui->PlotC->replot();
+            qDebug()<<"effectivePower"<<endl;
+        }
+        else if(ui->radioButtonReactive->isChecked())
+        {
+            ui->PlotA->graph()->addData(m_reactivePower.keys,m_reactivePower.A);
+            ui->PlotB->graph()->addData(m_reactivePower.keys,m_reactivePower.B);
+            ui->PlotC->graph()->addData(m_reactivePower.keys,m_reactivePower.C);
+            ui->PlotA->replot();
+            ui->PlotB->replot();
+            ui->PlotC->replot();
+            qDebug()<<"reactivePower"<<endl;
+        }
+        else if(ui->radioButtonApparent->isChecked())
+        {
+            ui->PlotA->graph()->addData(m_apparentPower.keys,m_apparentPower.A);
+            ui->PlotB->graph()->addData(m_apparentPower.keys,m_apparentPower.B);
+            ui->PlotC->graph()->addData(m_apparentPower.keys,m_apparentPower.C);
+            ui->PlotA->replot();
+            ui->PlotB->replot();
+            ui->PlotC->replot();
+            qDebug()<<"apparentPower"<<endl;
+        }
+        else if(ui->radioButtonPowerFactor->isChecked())
+        {
+            ui->PlotA->graph()->addData(m_powerFactor.keys,m_powerFactor.A);
+            ui->PlotB->graph()->addData(m_powerFactor.keys,m_powerFactor.B);
+            ui->PlotC->graph()->addData(m_powerFactor.keys,m_powerFactor.C);
+            ui->PlotA->replot();
+            ui->PlotB->replot();
+            ui->PlotC->replot();
+            qDebug()<<"powerFactor"<<endl;
+        }
+    }
 }
 
 void Dialog::insertData(datatype data, QVector<datatype> &dataVector, QVector<datatype> &keys)

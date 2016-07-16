@@ -22,7 +22,7 @@ struct dataToRead
     QByteArray current;
     QByteArray effectivePower;
     QByteArray reactivePower;
-    QByteArray apprentPower;
+    QByteArray apparentPower;
     QByteArray powerFactor;
 };
 struct dataToPlot
@@ -54,13 +54,13 @@ public:
     void initPort();
     void initData();
     void initPlotStyle();
-    void initConnections();
     void getVoltage();
     void getCurrent();
     void getEffectivePower();
     void getReactivePower();
     void getApparentPower();
     void getPowerFactor();
+    void whichToPlot();
     void insertData(datatype data, QVector<datatype>& dataVector,QVector<datatype>& keys);
     ~Dialog();
 
@@ -68,16 +68,7 @@ private slots:
     void on_launch_clicked();
     void parseData();
     void getAndPlotData();
-    //    void plotVoltage(float A,float B,float C);
-    //    void plotCurrent(float A,float B,float C);
-    //    void plotEffectivePower(float A,float B,float C,float S);
-    //    void plotReactivePower(float A,float B,float C,float S);
-    //    void plotApparentPower(float A,float B,float C,float S);
-    //    void plotPowerFactor(float A,float B,float C,float S);
-
-
     void on_stopPlot_clicked();
-
     void on_startPlot_clicked();
 
 signals:
