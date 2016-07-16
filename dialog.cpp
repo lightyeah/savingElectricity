@@ -2,6 +2,7 @@
 #include "ui_dialog.h"
 #include <QString>
 #include <QTimer>
+#include <QThread>
 #define BYTE_NUMBER_VOLTAGE 22
 #define BYTE_NUMBER_CURRENT 25
 #define BYTE_NUMBER_EFFECTIVE_POWER 28
@@ -26,7 +27,17 @@ Dialog::Dialog(QWidget *parent) :
 void Dialog::initPort()
 {
     portWrite=new QSerialPort(this);
-    portWrite->setPortName(ui->writePortNumber->text());
+    foreach (const QSerialPortInfo &info,QSerialPortInfo::availablePorts())
+    {
+        QString portDescription=info.description();
+        if(portDescription.contains(QString("CH341A")))
+        {
+            portWrite->setPort(info);
+            ui->writePortNumber->setText(info.portName());
+        }
+
+    }
+
     portWrite->setBaudRate(QSerialPort::Baud2400);
     portWrite->setDataBits(QSerialPort::Data8);
     portWrite->setParity(QSerialPort::EvenParity);
@@ -39,12 +50,12 @@ void Dialog::initPort()
 
 void Dialog::initData()
 {
-//    m_data.countApparentPower=0;
-//    m_data.countCurrent=0;
-//    m_data.countEffectivePower=0;
-//    m_data.countPowerFactor=0;
-//    m_data.countReactivePower=0;
-//    m_data.countVoltage=0;
+    //    m_data.countApparentPower=0;
+    //    m_data.countCurrent=0;
+    //    m_data.countEffectivePower=0;
+    //    m_data.countPowerFactor=0;
+    //    m_data.countReactivePower=0;
+    //    m_data.countVoltage=0;
     m_data.count=0;
     m_readType=NoneType;
 }
@@ -96,6 +107,7 @@ void Dialog::parseData()
             QByteArray CH=m_data.buffer.mid(19,1);
             datatype C=(CH.toHex().toFloat()-33)*10+(CL.toHex().toFloat()-33)*0.1;
             ui->readPortContent->setText(QString("%1").arg(A,0));
+            qDebug()<<"get voltage data A "<<A<<endl;
             insertData(A,m_voltage.A,m_voltage.keys);
             insertData(B,m_voltage.B,m_voltage.keys);
             insertData(C,m_voltage.C,m_voltage.keys);
@@ -121,6 +133,7 @@ void Dialog::parseData()
             QByteArray CH=m_data.buffer.mid(22,1);
             datatype C=(CH.toHex().toFloat()-33)*10+(CM.toHex().toFloat()-33)*0.1+(CL.toHex().toFloat()-33)*0.001;
             ui->readPortContent->setText(QString("%1").arg(A,0));
+            qDebug()<<"get current data A "<<A<<endl;
             insertData(A,m_current.A,m_current.keys);
             insertData(B,m_current.B,m_current.keys);
             insertData(C,m_current.C,m_current.keys);

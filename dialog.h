@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QtSerialPort/QSerialPort>
+#include <QtSerialPort/QSerialPortInfo>
 #include <QVector>
 #include <qcustomplot.h>
 typedef double datatype;
