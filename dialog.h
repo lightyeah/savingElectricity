@@ -12,18 +12,20 @@ class Dialog;
 
 struct dataToRead
 {
-    int countVoltage;
-    int countCurrent;
-    int countEffectivePower;
-    int countReactivePower;
-    int countApparentPower;
-    int countPowerFactor;
-    QByteArray voltage;
-    QByteArray current;
-    QByteArray effectivePower;
-    QByteArray reactivePower;
-    QByteArray apparentPower;
-    QByteArray powerFactor;
+//    int countVoltage;
+//    int countCurrent;
+//    int countEffectivePower;
+//    int countReactivePower;
+//    int countApparentPower;
+//    int countPowerFactor;
+    int count;
+//    QByteArray voltage;
+//    QByteArray current;
+//    QByteArray effectivePower;
+//    QByteArray reactivePower;
+//    QByteArray apparentPower;
+//    QByteArray powerFactor;
+    QByteArray buffer;
 };
 struct dataToPlot
 {
