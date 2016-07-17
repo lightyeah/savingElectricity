@@ -6,6 +6,7 @@
 #include <QtSerialPort/QSerialPortInfo>
 #include <QVector>
 #include <qcustomplot.h>
+#include <QTimer>
 typedef double datatype;
 namespace Ui {
 class Dialog;
@@ -57,6 +58,15 @@ public:
     void initPort();
     void initData();
     void initPlotStyle();
+    void initConnections();
+    void insertData(datatype data, QVector<datatype>& dataVector,QVector<datatype>& keys);
+    ~Dialog();
+
+private slots:
+    void on_launch_clicked();
+    void parseData();
+    void on_stopPlot_clicked();
+    void on_startPlot_clicked();
     void getVoltage();
     void getCurrent();
     void getEffectivePower();
@@ -64,23 +74,15 @@ public:
     void getApparentPower();
     void getPowerFactor();
     void whichToPlot();
-    void insertData(datatype data, QVector<datatype>& dataVector,QVector<datatype>& keys);
-    ~Dialog();
-
-private slots:
-    void on_launch_clicked();
-    void parseData();
-    void getAndPlotData();
-    void on_stopPlot_clicked();
-    void on_startPlot_clicked();
+    void clearPlotData();
 
 signals:
-    void voltageDataGot(datatype A,datatype B,datatype C);
-    void currentDataGot(datatype A,datatype B,datatype C);
-    void effectivePowerDataGot(datatype A,datatype B,datatype C,datatype S);
-    void reactivePowerDataGot(datatype A,datatype B,datatype C,datatype S);
-    void apparentPowerDataGot(datatype A,datatype B,datatype C,datatype S);
-    void powerFactorDataGot(datatype A,datatype B,datatype C,datatype S);
+    void voltageDataGot();
+    void currentDataGot();
+    void effectivePowerDataGot();
+    void reactivePowerDataGot();
+    void apparentPowerDataGot();
+    void powerFactorDataGot();
 
 
 private:
@@ -95,6 +97,7 @@ private:
     dataToPlot m_reactivePower;
     dataToPlot m_apparentPower;
     dataToPlot m_powerFactor;
+    QTimer * timer;
 
 
 
