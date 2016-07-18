@@ -38,6 +38,16 @@ struct dataToPlot
     QVector<datatype> keys;
 };
 
+struct instruction
+{
+    QByteArray voltageInstruction;
+    QByteArray currentInstruction;
+    QByteArray effectivePowerInstruction;
+    QByteArray reactivePowerInstruction;
+    QByteArray apparentPowerInstruction;
+    QByteArray powerFactorInstruction;
+};
+
 enum readType
 {
     NoneType=0,
@@ -75,6 +85,8 @@ private slots:
     void getPowerFactor();
     void whichToPlot();
     void clearPlotData();
+    void handleTimeout();
+    void startTimeoutTimer();
 
 signals:
     void voltageDataGot();
@@ -88,7 +100,6 @@ signals:
 private:
     Ui::Dialog *ui;
     QSerialPort * portWrite;
-    QSerialPort * portRead;
     dataToRead m_data;
     readType m_readType;
     dataToPlot m_voltage;
@@ -98,6 +109,9 @@ private:
     dataToPlot m_apparentPower;
     dataToPlot m_powerFactor;
     QTimer * timer;
+    QTimer * timeout;
+    instruction m_instruction;
+    int count;
 
 
 

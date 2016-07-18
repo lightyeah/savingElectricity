@@ -17,12 +17,15 @@ Dialog::Dialog(QWidget *parent) :
 {
     ui->setupUi(this);
     timer=new QTimer(this);
+    timeout=new QTimer(this);
     connect(timer,&QTimer::timeout,this,&Dialog::getVoltage);
+    connect(timeout,&QTimer::timeout,this,&Dialog::handleTimeout);
+    count=0;
     initPort();
     initData();
     initConnections();
     initPlotStyle();
-    timer->start();
+    timer->start(1000);
 }
 
 void Dialog::initPort()
@@ -46,6 +49,7 @@ void Dialog::initPort()
     portWrite->setFlowControl(QSerialPort::NoFlowControl);
     portWrite->open(QIODevice::ReadWrite);
     connect(portWrite,&QSerialPort::readyRead,this,&Dialog::parseData);
+    connect(portWrite,&QSerialPort::bytesWritten,this,&Dialog::startTimeoutTimer);
 
 }
 
@@ -53,22 +57,44 @@ void Dialog::initData()
 {
     m_data.count=0;
     m_readType=NoneType;
+    m_instruction.voltageInstruction=QString("68aaaaaaaaaaaa68110433323435af16").toLocal8Bit();
+    m_instruction.currentInstruction=QString("68aaaaaaaaaaaa68110433323535b016").toLocal8Bit();
+    m_instruction.effectivePowerInstruction=QString("68aaaaaaaaaaaa68110433323635b116").toLocal8Bit();
+    m_instruction.reactivePowerInstruction=QString("68aaaaaaaaaaaa68110433323735b216").toLocal8Bit();
+    m_instruction.apparentPowerInstruction=QString("68aaaaaaaaaaaa68110433323835b316").toLocal8Bit();
+    m_instruction.powerFactorInstruction=QString("68aaaaaaaaaaaa68110433323935b416").toLocal8Bit();
+    m_instruction.voltageInstruction=QByteArray::fromHex(m_instruction.voltageInstruction);
+    m_instruction.currentInstruction=QByteArray::fromHex(m_instruction.currentInstruction);
+    m_instruction.effectivePowerInstruction=QByteArray::fromHex(m_instruction.effectivePowerInstruction);
+    m_instruction.reactivePowerInstruction=QByteArray::fromHex( m_instruction.reactivePowerInstruction);
+    m_instruction.apparentPowerInstruction=QByteArray::fromHex(m_instruction.apparentPowerInstruction);
+    m_instruction.powerFactorInstruction=QByteArray::fromHex(m_instruction.powerFactorInstruction);
+
 }
 
 void Dialog::initPlotStyle()
 {
     ui->PlotA->addGraph();
     ui->PlotA->graph(0)->setPen(QPen(Qt::blue));
+    ui->PlotA->graph(0)->setName("Phase A");
+    ui->PlotA->xAxis->setLabel("time");
     ui->PlotA->xAxis->setRange(0,51);
-    ui->PlotA->yAxis->setRange(200,240);
+    ui->PlotA->yAxis->setRange(0,240);
     ui->PlotB->addGraph();
     ui->PlotB->graph(0)->setPen(QPen(Qt::green));
     ui->PlotB->xAxis->setRange(0,51);
-    ui->PlotB->yAxis->setRange(-1,270);
+    ui->PlotB->yAxis->setRange(220,270);
     ui->PlotC->addGraph();
     ui->PlotC->graph(0)->setPen(QPen(Qt::red));
     ui->PlotC->xAxis->setRange(0,51);
-    ui->PlotC->yAxis->setRange(-1,270);
+    ui->PlotC->yAxis->setRange(220,270);
+    ui->PlotA->plotLayout()->insertRow(0);
+    ui->PlotA->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->PlotA, "A相"));
+    ui->PlotB->plotLayout()->insertRow(0);
+    ui->PlotB->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->PlotB, "B相"));
+    ui->PlotC->plotLayout()->insertRow(0);
+    ui->PlotC->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->PlotC, "C相"));
+
 }
 
 void Dialog::initConnections()
@@ -95,13 +121,20 @@ void Dialog::on_launch_clicked()
 
 void Dialog::parseData()
 {
+    //    qDebug()<<"begin read and parse data "<<endl;
+    //    qDebug()<<"read type is "<<m_readType<<endl;
+    //    qDebug()<<"the number of bytes that have been read is "<<m_data.count<<endl;
+
     switch(m_readType)
     {
     case ReadVoltage:
         m_data.buffer.append(portWrite->readAll());
-        ++m_data.count;
-        if(m_data.count>=BYTE_NUMBER_VOLTAGE)
+//        ++m_data.count;
+        if(m_data.buffer.size()==BYTE_NUMBER_VOLTAGE)
         {
+            qDebug()<<"read type is "<<m_readType<<endl;
+            qDebug()<<"the number of bytes that have been read is "<<m_data.count<<endl;
+            timeout->stop();
             QByteArray AL=m_data.buffer.mid(14,1);
             QByteArray AH=m_data.buffer.mid(15,1);
             datatype A=(AH.toHex().toFloat()-33)*10+(AL.toHex().toFloat()-33)*0.1;
@@ -113,19 +146,32 @@ void Dialog::parseData()
             datatype C=(CH.toHex().toFloat()-33)*10+(CL.toHex().toFloat()-33)*0.1;
             ui->readPortContent->setText(QString("%1").arg(A,0));
             qDebug()<<"get voltage data A "<<A<<endl;
+            qDebug()<<"the ByteArray is "<<m_data.buffer.toHex()<<endl;
+            qDebug()<<"the buffer size is "<<m_data.buffer.size()<<endl;
             insertData(A,m_voltage.A,m_voltage.keys);
             insertData(B,m_voltage.B,m_voltage.keys);
             insertData(C,m_voltage.C,m_voltage.keys);
+            qDebug()<<"size of keys "<<m_voltage.keys.size()<<" size of value "<<m_voltage.A.size()<<endl;
             m_data.count=0;
             m_data.buffer.clear();
             emit voltageDataGot();
+            count++;
+            qDebug()<<"the total is "<<count<<endl;
+        }
+        else if(m_data.buffer.size()>BYTE_NUMBER_VOLTAGE)
+        {
+            timeout->stop();
+            m_data.count=0;
+            m_data.buffer.clear();
+            getVoltage();
         }
         break;
     case ReadCurrent:
         m_data.buffer.append(portWrite->readAll());
         ++m_data.count;
-        if(m_data.count>=BYTE_NUMBER_CURRENT)
+        if(m_data.buffer.size()==BYTE_NUMBER_CURRENT)
         {
+            timeout->stop();
             QByteArray AL=m_data.buffer.mid(14,1);
             QByteArray AM=m_data.buffer.mid(15,1);
             QByteArray AH=m_data.buffer.mid(16,1);
@@ -140,6 +186,7 @@ void Dialog::parseData()
             datatype C=(CH.toHex().toFloat()-33)*10+(CM.toHex().toFloat()-33)*0.1+(CL.toHex().toFloat()-33)*0.001;
             ui->readPortContent->setText(QString("%1").arg(A,0));
             qDebug()<<"get current data A "<<A<<endl;
+//            qDebug()<<"the ByteArray is "<<m_data.buffer.toHex()<<endl;
             insertData(A,m_current.A,m_current.keys);
             insertData(B,m_current.B,m_current.keys);
             insertData(C,m_current.C,m_current.keys);
@@ -147,12 +194,20 @@ void Dialog::parseData()
             m_data.buffer.clear();
             emit currentDataGot();
         }
+        else if(m_data.buffer.size()>BYTE_NUMBER_CURRENT)
+        {
+            timeout->stop();
+            m_data.count=0;
+            m_data.buffer.clear();
+            getCurrent();
+        }
         break;
     case ReadEffectivePower:
         m_data.buffer.append(portWrite->readAll());
         ++m_data.count;
-        if(m_data.count>=BYTE_NUMBER_EFFECTIVE_POWER)
+        if(m_data.buffer.size()==BYTE_NUMBER_EFFECTIVE_POWER)
         {
+            timeout->stop();
             QByteArray SL=m_data.buffer.mid(14,1);
             QByteArray SM=m_data.buffer.mid(15,1);
             QByteArray SH=m_data.buffer.mid(16,1);
@@ -179,12 +234,20 @@ void Dialog::parseData()
             m_data.buffer.clear();
             emit effectivePowerDataGot();
         }
+        else if(m_data.buffer.size()>BYTE_NUMBER_EFFECTIVE_POWER)
+        {
+            timeout->stop();
+            m_data.count=0;
+            m_data.buffer.clear();
+            getEffectivePower();
+        }
         break;
     case ReadReactivePower:
         m_data.buffer.append(portWrite->readAll());
         ++m_data.count;
-        if(m_data.count>=BYTE_NUMBER_REACTIVE_POWER)
+        if(m_data.buffer.size()==BYTE_NUMBER_REACTIVE_POWER)
         {
+            timeout->stop();
             QByteArray SL=m_data.buffer.mid(14,1);
             QByteArray SM=m_data.buffer.mid(15,1);
             QByteArray SH=m_data.buffer.mid(16,1);
@@ -211,12 +274,20 @@ void Dialog::parseData()
             m_data.buffer.clear();
             emit reactivePowerDataGot();
         }
+        else if(m_data.buffer.size()>BYTE_NUMBER_REACTIVE_POWER)
+        {
+            timeout->stop();
+            m_data.count=0;
+            m_data.buffer.clear();
+            getReactivePower();
+        }
         break;
     case ReadApparentPower:
         m_data.buffer.append(portWrite->readAll());
         ++m_data.count;
-        if(m_data.count>=BYTE_NUMBER_APPRENT_POWER)
+        if(m_data.buffer.size()==BYTE_NUMBER_APPRENT_POWER)
         {
+            timeout->stop();
             QByteArray SL=m_data.buffer.mid(14,1);
             QByteArray SM=m_data.buffer.mid(15,1);
             QByteArray SH=m_data.buffer.mid(16,1);
@@ -243,12 +314,20 @@ void Dialog::parseData()
             m_data.buffer.clear();
             emit apparentPowerDataGot();
         }
+        else if(m_data.buffer.size()>BYTE_NUMBER_APPRENT_POWER)
+        {
+            timeout->stop();
+            m_data.count=0;
+            m_data.buffer.clear();
+            getApparentPower();
+        }
         break;
     case ReadPowerFactor:
         m_data.buffer.append(portWrite->readAll());
         ++m_data.count;
-        if(m_data.count>=BYTE_NUMBER_POWER_FACTOR)
+        if(m_data.buffer.size()==BYTE_NUMBER_POWER_FACTOR)
         {
+            timeout->stop();
             QByteArray SL=m_data.buffer.mid(14,1);
             QByteArray SH=m_data.buffer.mid(15,1);
             datatype S=(SH.toHex().toFloat()-33)*0.1+(SL.toHex().toFloat()-33)*0.001;
@@ -271,8 +350,16 @@ void Dialog::parseData()
             m_data.buffer.clear();
             emit powerFactorDataGot();
         }
+        else if(m_data.buffer.size()>BYTE_NUMBER_POWER_FACTOR)
+        {
+            timeout->stop();
+            m_data.count=0;
+            m_data.buffer.clear();
+            getPowerFactor();
+        }
         break;
     default:
+        qDebug()<<"the default type is "<<m_readType<<endl;
         break;
     }
 }
@@ -280,58 +367,83 @@ void Dialog::parseData()
 
 void Dialog::getVoltage()
 {
+    qDebug()<<"before read voltage"<<endl;
     timer->stop();
-    QByteArray data(QString("68aaaaaaaaaaaa68110433323435af16").toLocal8Bit());
-    portWrite->write(data.fromHex(data));
     m_readType=ReadVoltage;
+    portWrite->write(m_instruction.voltageInstruction);
+    qDebug()<<"fetch voltage"<<endl;
+
 }
 
 void Dialog::getCurrent()
 {
-    QByteArray data(QString("68aaaaaaaaaaaa68110433323535b016").toLocal8Bit());
-    portWrite->write(data.fromHex(data));
+    //    static QByteArray data(QString("68aaaaaaaaaaaa68110433323535b016").toLocal8Bit());
+    qDebug()<<"before read current"<<endl;
     m_readType=ReadCurrent;
+    portWrite->write(m_instruction.currentInstruction);
+    qDebug()<<"fetch current"<<endl;
+
 
 }
 
 void Dialog::getEffectivePower()
 {
-    QByteArray data(QString("68aaaaaaaaaaaa68110433323635b116").toLocal8Bit());
-    portWrite->write(data.fromHex(data));
+    //    static QByteArray data(QString("68aaaaaaaaaaaa68110433323635b116").toLocal8Bit());
+    qDebug()<<"before read effectivePower"<<endl;
     m_readType=ReadEffectivePower;
+    portWrite->write(m_instruction.effectivePowerInstruction);
+    qDebug()<<"fetch effective Power"<<endl;
+
 }
 
 void Dialog::getReactivePower()
 {
-    QByteArray data(QString("68aaaaaaaaaaaa68110433323735b216").toLocal8Bit());
-    portWrite->write(data.fromHex(data));
+    //    static QByteArray data(QString("68aaaaaaaaaaaa68110433323735b216").toLocal8Bit());
+    qDebug()<<"before read reactivePower"<<endl;
     m_readType=ReadReactivePower;
+    portWrite->write(m_instruction.reactivePowerInstruction);
+    qDebug()<<"fetch reactive Power"<<endl;
+
 }
 
 void Dialog::getApparentPower()
 {
-    QByteArray data(QString("68aaaaaaaaaaaa68110433323835b316").toLocal8Bit());
-    portWrite->write(data.fromHex(data));
+    //    static QByteArray data(QString("68aaaaaaaaaaaa68110433323835b316").toLocal8Bit());
+    qDebug()<<"before read apparentPower"<<endl;
     m_readType=ReadApparentPower;
+    portWrite->write(m_instruction.apparentPowerInstruction);
+    qDebug()<<"fetch Apparent Power"<<endl;
+
 }
 
 void Dialog::getPowerFactor()
 {
-    QByteArray data(QString("68aaaaaaaaaaaa68110433323935b416").toLocal8Bit());
-    portWrite->write(data.fromHex(data));
+    //    static QByteArray data(QString("68aaaaaaaaaaaa68110433323935b416").toLocal8Bit());
+    qDebug()<<"before read powerFactor"<<endl;
     m_readType=ReadPowerFactor;
+    portWrite->write(m_instruction.powerFactorInstruction);
+    qDebug()<<"fetch power factor"<<endl;
+
 }
 
 void Dialog::whichToPlot()
 {
+    qDebug()<<"excute wichToPlot"<<endl;
     if(!(ui->startPlot->isEnabled()))
     {
         if (ui->radioButtonVoltage->isChecked())
         {
             clearPlotData();
+            //            ui->PlotA->graph()->rescaleAxes();
+            qDebug()<<"size of keys "<<m_voltage.keys<<" size of value "<<m_voltage.A<<endl;
+
             ui->PlotA->graph()->addData(m_voltage.keys,m_voltage.A);
             ui->PlotB->graph()->addData(m_voltage.keys,m_voltage.B);
             ui->PlotC->graph()->addData(m_voltage.keys,m_voltage.C);
+            ui->PlotA->yAxis->rescale();
+            ui->PlotB->yAxis->rescale();
+            ui->PlotC->yAxis->rescale();
+
             ui->PlotA->replot();
             ui->PlotB->replot();
             ui->PlotC->replot();
@@ -394,7 +506,7 @@ void Dialog::whichToPlot()
             qDebug()<<"powerFactor"<<endl;
         }
     }
-    timer->start();
+    timer->start(1000);
 }
 
 void Dialog::clearPlotData()
@@ -404,6 +516,56 @@ void Dialog::clearPlotData()
     ui->PlotC->graph()->clearData();
 }
 
+void Dialog::handleTimeout()
+{
+    if(m_readType==ReadVoltage)
+    {
+        timeout->stop();
+        m_data.buffer.clear();
+        emit voltageDataGot();
+        qDebug()<<"lost voltage"<<endl;
+    }
+    else if(m_readType==ReadCurrent)
+    {
+        timeout->stop();
+        m_data.buffer.clear();
+        emit currentDataGot();
+        qDebug()<<"lost current"<<endl;
+    }
+    else if(m_readType==ReadEffectivePower)
+    {
+        timeout->stop();
+        m_data.buffer.clear();
+        emit effectivePowerDataGot();
+        qDebug()<<"lost effectivePower"<<endl;
+    }
+    else if(m_readType==ReadReactivePower)
+    {
+        timeout->stop();
+        m_data.buffer.clear();
+        emit reactivePowerDataGot();
+        qDebug()<<"lost reactivePower"<<endl;
+    }
+    else if(m_readType==ReadApparentPower)
+    {
+        timeout->stop();
+        m_data.buffer.clear();
+        emit apparentPowerDataGot();
+        qDebug()<<"lost apparentPower"<<endl;
+    }
+    else if(m_readType==ReadPowerFactor)
+    {
+        timeout->stop();
+        m_data.buffer.clear();
+        emit powerFactorDataGot();
+        qDebug()<<"lost PowerFactor"<<endl;
+    }
+}
+
+void Dialog::startTimeoutTimer()
+{
+    timeout->start(1000);
+}
 void Dialog::insertData(datatype data, QVector<datatype> &dataVector, QVector<datatype> &keys)
 {
     if(dataVector.size()<DATA_VECTOR_LENGTH)
