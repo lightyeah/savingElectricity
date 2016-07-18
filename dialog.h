@@ -12,23 +12,6 @@ namespace Ui {
 class Dialog;
 }
 
-struct dataToRead
-{
-//    int countVoltage;
-//    int countCurrent;
-//    int countEffectivePower;
-//    int countReactivePower;
-//    int countApparentPower;
-//    int countPowerFactor;
-    int count;
-//    QByteArray voltage;
-//    QByteArray current;
-//    QByteArray effectivePower;
-//    QByteArray reactivePower;
-//    QByteArray apparentPower;
-//    QByteArray powerFactor;
-    QByteArray buffer;
-};
 struct dataToPlot
 {
     QVector<datatype> A;
@@ -100,7 +83,6 @@ signals:
 private:
     Ui::Dialog *ui;
     QSerialPort * portWrite;
-    dataToRead m_data;
     readType m_readType;
     dataToPlot m_voltage;
     dataToPlot m_current;
@@ -111,6 +93,7 @@ private:
     QTimer * timer;
     QTimer * timeout;
     instruction m_instruction;
+    QByteArray buffer;
     int count;
 
 
