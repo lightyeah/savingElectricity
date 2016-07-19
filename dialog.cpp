@@ -3,6 +3,8 @@
 #include <QString>
 #include <QTimer>
 #include <QThread>
+#include <algorithm>
+#include <vector>
 #define BYTE_NUMBER_VOLTAGE 22
 #define BYTE_NUMBER_CURRENT 25
 #define BYTE_NUMBER_EFFECTIVE_POWER 28
@@ -42,7 +44,7 @@ void Dialog::initPort()
 
     }
 
-    portWrite->setBaudRate(QSerialPort::Baud2400);
+    portWrite->setBaudRate(QSerialPort::Baud9600);
     portWrite->setDataBits(QSerialPort::Data8);
     portWrite->setParity(QSerialPort::EvenParity);
     portWrite->setStopBits(QSerialPort::OneStop);
@@ -73,17 +75,31 @@ void Dialog::initData()
 
 void Dialog::initPlotStyle()
 {
+
     ui->PlotA->addGraph();
+//    ui->PlotA->legend->setVisible(true);
+    ui->PlotA->legend->autoMargins();
+    ui->PlotA->legend->setFont(QFont("Helvetica",9));
     ui->PlotA->graph(0)->setPen(QPen(Qt::blue));
-    ui->PlotA->graph(0)->setName("Phase A");
-    ui->PlotA->xAxis->setLabel("time");
+//    ui->PlotA->graph(0)->setName("Phase A");
+//    ui->PlotA->xAxis->setLabel("time");
     ui->PlotA->xAxis->setRange(0,51);
     ui->PlotA->yAxis->setRange(0,240);
     ui->PlotB->addGraph();
+//    ui->PlotB->legend->setVisible(true);
+    ui->PlotB->legend->autoMargins();
+    ui->PlotB->legend->setFont(QFont("Helvetica",9));
+    ui->PlotB->graph(0)->setPen(QPen(Qt::blue));
+//    ui->PlotB->graph(0)->setName("Phase B");
     ui->PlotB->graph(0)->setPen(QPen(Qt::green));
     ui->PlotB->xAxis->setRange(0,51);
     ui->PlotB->yAxis->setRange(220,270);
     ui->PlotC->addGraph();
+//    ui->PlotC->legend->setVisible(true);
+    ui->PlotC->legend->autoMargins();
+    ui->PlotC->legend->setFont(QFont("Helvetica",9));
+    ui->PlotC->graph(0)->setPen(QPen(Qt::blue));
+//    ui->PlotC->graph(0)->setName("Phase C");
     ui->PlotC->graph(0)->setPen(QPen(Qt::red));
     ui->PlotC->xAxis->setRange(0,51);
     ui->PlotC->yAxis->setRange(220,270);
@@ -104,6 +120,12 @@ void Dialog::initConnections()
     connect(this,&Dialog::reactivePowerDataGot,this,&Dialog::getApparentPower);
     connect(this,&Dialog::apparentPowerDataGot,this,&Dialog::getPowerFactor);
     connect(this,&Dialog::powerFactorDataGot,this,&Dialog::whichToPlot);
+    connect(ui->radioButtonVoltage,&QRadioButton::clicked,this,&Dialog::updatePlotStyle);
+    connect(ui->radioButtonCurrent,&QRadioButton::clicked,this,&Dialog::updatePlotStyle);
+    connect(ui->radioButtonEffective,&QRadioButton::clicked,this,&Dialog::updatePlotStyle);
+    connect(ui->radioButtonReactive,&QRadioButton::clicked,this,&Dialog::updatePlotStyle);
+    connect(ui->radioButtonApparent,&QRadioButton::clicked,this,&Dialog::updatePlotStyle);
+    connect(ui->radioButtonPowerFactor,&QRadioButton::clicked,this,&Dialog::updatePlotStyle);
 }
 
 
@@ -350,6 +372,7 @@ void Dialog::getVoltage()
     m_readType=ReadVoltage;
     portWrite->write(m_instruction.voltageInstruction);
     qDebug()<<"fetch voltage"<<endl;
+    qDebug()<<"write "<<m_instruction.voltageInstruction;
 
 }
 
@@ -404,76 +427,33 @@ void Dialog::whichToPlot()
     {
         if (ui->radioButtonVoltage->isChecked())
         {
-            clearPlotData();
-            //            ui->PlotA->graph()->rescaleAxes();
-            qDebug()<<"size of keys "<<m_voltage.keys<<" size of value "<<m_voltage.A<<endl;
-
-            ui->PlotA->graph()->addData(m_voltage.keys,m_voltage.A);
-            ui->PlotB->graph()->addData(m_voltage.keys,m_voltage.B);
-            ui->PlotC->graph()->addData(m_voltage.keys,m_voltage.C);
-            ui->PlotA->yAxis->rescale();
-            ui->PlotB->yAxis->rescale();
-            ui->PlotC->yAxis->rescale();
-
-            ui->PlotA->replot();
-            ui->PlotB->replot();
-            ui->PlotC->replot();
+            //            qDebug()<<"size of keys "<<m_voltage.keys<<" size of value "<<m_voltage.A<<endl;
+            updateGraph(m_voltage);
             qDebug()<<"voltage"<<endl;
         }
         else if(ui->radioButtonCurrent->isChecked())
         {
-            clearPlotData();
-            ui->PlotA->graph()->addData(m_current.keys,m_current.A);
-            ui->PlotB->graph()->addData(m_current.keys,m_current.B);
-            ui->PlotC->graph()->addData(m_current.keys,m_current.C);
-            ui->PlotA->replot();
-            ui->PlotB->replot();
-            ui->PlotC->replot();
+            updateGraph(m_current);
             qDebug()<<"current"<<endl;
         }
         else if(ui->radioButtonEffective->isChecked())
         {
-            clearPlotData();
-            ui->PlotA->graph()->addData(m_effectivePower.keys,m_effectivePower.A);
-            ui->PlotB->graph()->addData(m_effectivePower.keys,m_effectivePower.B);
-            ui->PlotC->graph()->addData(m_effectivePower.keys,m_effectivePower.C);
-            ui->PlotA->replot();
-            ui->PlotB->replot();
-            ui->PlotC->replot();
+            updateGraph(m_effectivePower);
             qDebug()<<"effectivePower"<<endl;
         }
         else if(ui->radioButtonReactive->isChecked())
         {
-            clearPlotData();
-            ui->PlotA->graph()->addData(m_reactivePower.keys,m_reactivePower.A);
-            ui->PlotB->graph()->addData(m_reactivePower.keys,m_reactivePower.B);
-            ui->PlotC->graph()->addData(m_reactivePower.keys,m_reactivePower.C);
-            ui->PlotA->replot();
-            ui->PlotB->replot();
-            ui->PlotC->replot();
+            updateGraph(m_reactivePower);
             qDebug()<<"reactivePower"<<endl;
         }
         else if(ui->radioButtonApparent->isChecked())
         {
-            clearPlotData();
-            ui->PlotA->graph()->addData(m_apparentPower.keys,m_apparentPower.A);
-            ui->PlotB->graph()->addData(m_apparentPower.keys,m_apparentPower.B);
-            ui->PlotC->graph()->addData(m_apparentPower.keys,m_apparentPower.C);
-            ui->PlotA->replot();
-            ui->PlotB->replot();
-            ui->PlotC->replot();
+            updateGraph(m_apparentPower);
             qDebug()<<"apparentPower"<<endl;
         }
         else if(ui->radioButtonPowerFactor->isChecked())
         {
-            clearPlotData();
-            ui->PlotA->graph()->addData(m_powerFactor.keys,m_powerFactor.A);
-            ui->PlotB->graph()->addData(m_powerFactor.keys,m_powerFactor.B);
-            ui->PlotC->graph()->addData(m_powerFactor.keys,m_powerFactor.C);
-            ui->PlotA->replot();
-            ui->PlotB->replot();
-            ui->PlotC->replot();
-
+            updateGraph(m_powerFactor);
             qDebug()<<"powerFactor"<<endl;
         }
     }
@@ -537,6 +517,52 @@ void Dialog::startTimeoutTimer()
 {
     timeout->start(1000);
 }
+
+void Dialog::updatePlotStyle()
+{
+    if(ui->radioButtonVoltage->isChecked())
+    {
+
+        ui->PlotA->yAxis->setLabel("电压/V");
+        //        ui->PlotA->yAxis->setRange(220,240);
+        ui->PlotB->yAxis->setLabel("电压/V");
+        //        ui->PlotB->yAxis->setRange(220,240);
+        ui->PlotC->yAxis->setLabel("电压/V");
+        //        ui->PlotC->yAxis->setRange(220,240);
+
+    }
+    else if(ui->radioButtonCurrent->isChecked())
+    {
+        //        std::max
+        ui->PlotA->yAxis->setLabel("电流/A");
+        ui->PlotB->yAxis->setLabel("电流/A");
+        ui->PlotC->yAxis->setLabel("电流/A");
+    }
+    else if(ui->radioButtonEffective->isChecked())
+    {
+        ui->PlotA->yAxis->setLabel("有功功率/KW");
+        ui->PlotB->yAxis->setLabel("有功功率/KW");
+        ui->PlotC->yAxis->setLabel("有功功率/KW");
+    }
+    else if(ui->radioButtonReactive->isChecked())
+    {
+        ui->PlotA->yAxis->setLabel("无功功率/KW");
+        ui->PlotB->yAxis->setLabel("无功功率/KW");
+        ui->PlotC->yAxis->setLabel("无功功率/KW");
+    }
+    else if(ui->radioButtonApparent->isChecked())
+    {
+        ui->PlotA->yAxis->setLabel("视在功率/KW");
+        ui->PlotB->yAxis->setLabel("视在功率/KW");
+        ui->PlotC->yAxis->setLabel("视在功率/KW");
+    }
+    else if(ui->radioButtonPowerFactor->isChecked())
+    {
+        ui->PlotA->yAxis->setLabel("功率因素");
+        ui->PlotB->yAxis->setLabel("功率因素");
+        ui->PlotC->yAxis->setLabel("功率因素");
+    }
+}
 void Dialog::insertData(datatype data, QVector<datatype> &dataVector, QVector<datatype> &keys)
 {
     if(dataVector.size()<DATA_VECTOR_LENGTH)
@@ -550,6 +576,20 @@ void Dialog::insertData(datatype data, QVector<datatype> &dataVector, QVector<da
         dataVector.pop_front();
         dataVector.push_back(data);
     }
+}
+
+void Dialog::updateGraph(dataToPlot &data)
+{
+    clearPlotData();
+    ui->PlotA->graph()->addData(data.keys,data.A);
+    ui->PlotB->graph()->addData(data.keys,data.B);
+    ui->PlotC->graph()->addData(data.keys,data.C);
+    ui->PlotA->yAxis->rescale();
+    ui->PlotB->yAxis->rescale();
+    ui->PlotC->yAxis->rescale();
+    ui->PlotA->replot();
+    ui->PlotB->replot();
+    ui->PlotC->replot();
 }
 
 void Dialog::on_stopPlot_clicked()

@@ -53,6 +53,7 @@ public:
     void initPlotStyle();
     void initConnections();
     void insertData(datatype data, QVector<datatype>& dataVector,QVector<datatype>& keys);
+    void updateGraph(dataToPlot &data);
     ~Dialog();
 
 private slots:
@@ -70,6 +71,8 @@ private slots:
     void clearPlotData();
     void handleTimeout();
     void startTimeoutTimer();
+    void updatePlotStyle();
+
 
 signals:
     void voltageDataGot();
