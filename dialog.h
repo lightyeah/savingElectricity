@@ -54,6 +54,7 @@ public:
     void initConnections();
     void insertData(datatype data, QVector<datatype>& dataVector,QVector<datatype>& keys);
     void updateGraph(dataToPlot &data);
+    double minus33(QByteArray data);
     ~Dialog();
 
 private slots:

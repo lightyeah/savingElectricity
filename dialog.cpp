@@ -36,7 +36,7 @@ void Dialog::initPort()
     foreach (const QSerialPortInfo &info,QSerialPortInfo::availablePorts())
     {
         QString portDescription=info.description();
-        if(portDescription.contains(QString("CH341A")))
+        if(portDescription.contains(QString("USB")))
         {
             portWrite->setPort(info);
             ui->writePortNumber->setText(info.portName());
@@ -95,7 +95,7 @@ void Dialog::initPlotStyle()
     ui->PlotB->xAxis->setRange(0,51);
     ui->PlotB->yAxis->setRange(220,270);
     ui->PlotC->addGraph();
-//    ui->PlotC->legend->setVisible(true);
+//    ui->PlotC->legend->setVisible(true);-
     ui->PlotC->legend->autoMargins();
     ui->PlotC->legend->setFont(QFont("Helvetica",9));
     ui->PlotC->graph(0)->setPen(QPen(Qt::blue));
@@ -108,7 +108,7 @@ void Dialog::initPlotStyle()
     ui->PlotB->plotLayout()->insertRow(0);
     ui->PlotB->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->PlotB, "B相"));
     ui->PlotC->plotLayout()->insertRow(0);
-    ui->PlotC->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->PlotC, "C相"));
+    ui->PlotC->plotLayout()->addElement(0, 0, new QCPPlotTitle(ui->PlotC, "总"));
 
 }
 
@@ -156,15 +156,18 @@ void Dialog::parseData()
             timeout->stop();
             QByteArray AL=buffer.mid(14,1);
             QByteArray AH=buffer.mid(15,1);
-            datatype A=(AH.toHex().toFloat()-33)*10+(AL.toHex().toFloat()-33)*0.1;
+            datatype A=(minus33(AH.toHex()))*10+(minus33(AL.toHex()))*0.1;
             QByteArray BL=buffer.mid(16,1);
             QByteArray BH=buffer.mid(17,1);
-            datatype B=(BH.toHex().toFloat()-33)*10+(BL.toHex().toFloat()-33)*0.1;
+            datatype B=(minus33(BH.toHex()))*10+(minus33(BL.toHex()))*0.1;
             QByteArray CL=buffer.mid(18,1);
             QByteArray CH=buffer.mid(19,1);
-            datatype C=(CH.toHex().toFloat()-33)*10+(CL.toHex().toFloat()-33)*0.1;
+            datatype C=(minus33(CH.toHex()))*10+minus33(CL.toHex())*0.1;
+            qDebug()<<"CL is "<<CL.toHex()<<endl;
+            qDebug()<<"CH is "<<CH.toHex()<<endl;
             ui->readPortContent->setText(QString("%1").arg(A,0));
             qDebug()<<"get voltage data A "<<A<<endl;
+            qDebug()<<"get voltage data C "<<C<<endl;
             qDebug()<<"the ByteArray is "<<buffer.toHex()<<endl;
             qDebug()<<"the buffer size is "<<buffer.size()<<endl;
             insertData(A,m_voltage.A,m_voltage.keys);
@@ -190,15 +193,15 @@ void Dialog::parseData()
             QByteArray AL=buffer.mid(14,1);
             QByteArray AM=buffer.mid(15,1);
             QByteArray AH=buffer.mid(16,1);
-            datatype A=(AH.toHex().toFloat()-33)*10+(AM.toHex().toFloat()-33)*0.1+(AL.toHex().toFloat()-33)*0.001;
+            datatype A=(minus33(AH.toHex()))*10+(minus33(AM.toHex()))*0.1+(minus33(AL.toHex()))*0.001;
             QByteArray BL=buffer.mid(17,1);
             QByteArray BM=buffer.mid(18,1);
             QByteArray BH=buffer.mid(19,1);
-            datatype B=(BH.toHex().toFloat()-33)*10+(BM.toHex().toFloat()-33)*0.1+(BL.toHex().toFloat()-33)*0.001;
+            datatype B=(minus33(BH.toHex()))*10+(minus33(BM.toHex()))*0.1+(minus33(BL.toHex()))*0.001;
             QByteArray CL=buffer.mid(20,1);
             QByteArray CM=buffer.mid(21,1);
             QByteArray CH=buffer.mid(22,1);
-            datatype C=(CH.toHex().toFloat()-33)*10+(CM.toHex().toFloat()-33)*0.1+(CL.toHex().toFloat()-33)*0.001;
+            datatype C=(minus33(CH.toHex()))*10+(minus33(CM.toHex()))*0.1+(minus33(CL.toHex()))*0.001;
             ui->readPortContent->setText(QString("%1").arg(A,0));
             qDebug()<<"get current data A "<<A<<endl;
             insertData(A,m_current.A,m_current.keys);
@@ -222,19 +225,19 @@ void Dialog::parseData()
             QByteArray SL=buffer.mid(14,1);
             QByteArray SM=buffer.mid(15,1);
             QByteArray SH=buffer.mid(16,1);
-            datatype S=(SH.toHex().toFloat()-33)+(SM.toHex().toFloat()-33)*0.01+(SL.toHex().toFloat()-33)*0.0001;
+            datatype S=(minus33(SH.toHex()))+(minus33(SM.toHex()))*0.01+(minus33(SL.toHex()))*0.0001;
             QByteArray AL=buffer.mid(17,1);
             QByteArray AM=buffer.mid(18,1);
             QByteArray AH=buffer.mid(19,1);
-            datatype A=(AH.toHex().toFloat()-33)+(AM.toHex().toFloat()-33)*0.01+(AL.toHex().toFloat()-33)*0.0001;
+            datatype A=(minus33(AH.toHex()))+(minus33(AM.toHex()))*0.01+(minus33(AL.toHex()))*0.0001;
             QByteArray BL=buffer.mid(20,1);
             QByteArray BM=buffer.mid(21,1);
             QByteArray BH=buffer.mid(22,1);
-            datatype B=(BH.toHex().toFloat()-33)+(BM.toHex().toFloat()-33)*0.01+(BL.toHex().toFloat()-33)*0.0001;
+            datatype B=(minus33(BH.toHex()))+(minus33(BM.toHex()))*0.01+(minus33(BL.toHex()))*0.0001;
             QByteArray CL=buffer.mid(23,1);
             QByteArray CM=buffer.mid(24,1);
             QByteArray CH=buffer.mid(25,1);
-            datatype C=(CH.toHex().toFloat()-33)+(CM.toHex().toFloat()-33)*0.01+(CL.toHex().toFloat()-33)*0.0001;
+            datatype C=(minus33(CH.toHex()))+(minus33(CM.toHex()))*0.01+(minus33(CL.toHex()))*0.0001;
             ui->readPortContent->setText(QString("%1").arg(A,0));
             qDebug()<<"get effectivePower data A "<<A<<endl;
             insertData(A,m_effectivePower.A,m_effectivePower.keys);
@@ -259,19 +262,19 @@ void Dialog::parseData()
             QByteArray SL=buffer.mid(14,1);
             QByteArray SM=buffer.mid(15,1);
             QByteArray SH=buffer.mid(16,1);
-            datatype S=(SH.toHex().toFloat()-33)+(SM.toHex().toFloat()-33)*0.01+(SL.toHex().toFloat()-33)*0.0001;
+            datatype S=(minus33(SH.toHex()))+(minus33(SM.toHex()))*0.01+(minus33(SL.toHex()))*0.0001;
             QByteArray AL=buffer.mid(17,1);
             QByteArray AM=buffer.mid(18,1);
             QByteArray AH=buffer.mid(19,1);
-            datatype A=(AH.toHex().toFloat()-33)+(AM.toHex().toFloat()-33)*0.01+(AL.toHex().toFloat()-33)*0.0001;
+            datatype A=(minus33(AH.toHex()))+(minus33(AM.toHex()))*0.01+(minus33(AL.toHex()))*0.0001;
             QByteArray BL=buffer.mid(20,1);
             QByteArray BM=buffer.mid(21,1);
             QByteArray BH=buffer.mid(22,1);
-            datatype B=(BH.toHex().toFloat()-33)+(BM.toHex().toFloat()-33)*0.01+(BL.toHex().toFloat()-33)*0.0001;
+            datatype B=(minus33(BH.toHex()))+(minus33(BM.toHex()))*0.01+(minus33(BL.toHex()))*0.0001;
             QByteArray CL=buffer.mid(23,1);
             QByteArray CM=buffer.mid(24,1);
             QByteArray CH=buffer.mid(25,1);
-            datatype C=(CH.toHex().toFloat()-33)+(CM.toHex().toFloat()-33)*0.01+(CL.toHex().toFloat()-33)*0.0001;
+            datatype C=(minus33(CH.toHex()))+(minus33(CM.toHex()))*0.01+(minus33(CL.toHex()))*0.0001;
             ui->readPortContent->setText(QString("%1").arg(A,0));
             qDebug()<<"get reactivePower data A "<<A<<endl;
             insertData(A,m_reactivePower.A,m_reactivePower.keys);
@@ -296,19 +299,19 @@ void Dialog::parseData()
             QByteArray SL=buffer.mid(14,1);
             QByteArray SM=buffer.mid(15,1);
             QByteArray SH=buffer.mid(16,1);
-            datatype S=(SH.toHex().toFloat()-33)+(SM.toHex().toFloat()-33)*0.01+(SL.toHex().toFloat()-33)*0.0001;
+            datatype S=(minus33(SH.toHex()))+(minus33(SM.toHex()))*0.01+(minus33(SL.toHex()))*0.0001;
             QByteArray AL=buffer.mid(17,1);
             QByteArray AM=buffer.mid(18,1);
             QByteArray AH=buffer.mid(19,1);
-            datatype A=(AH.toHex().toFloat()-33)+(AM.toHex().toFloat()-33)*0.01+(AL.toHex().toFloat()-33)*0.0001;
+            datatype A=(minus33(AH.toHex()))+(minus33(AM.toHex()))*0.01+(minus33(AL.toHex()))*0.0001;
             QByteArray BL=buffer.mid(20,1);
             QByteArray BM=buffer.mid(21,1);
             QByteArray BH=buffer.mid(22,1);
-            datatype B=(BH.toHex().toFloat()-33)+(BM.toHex().toFloat()-33)*0.01+(BL.toHex().toFloat()-33)*0.0001;
+            datatype B=(minus33(BH.toHex()))+(minus33(BM.toHex()))*0.01+(minus33(BL.toHex()))*0.0001;
             QByteArray CL=buffer.mid(23,1);
             QByteArray CM=buffer.mid(24,1);
             QByteArray CH=buffer.mid(25,1);
-            datatype C=(CH.toHex().toFloat()-33)+(CM.toHex().toFloat()-33)*0.01+(CL.toHex().toFloat()-33)*0.0001;
+            datatype C=(minus33(CH.toHex()))+(minus33(CM.toHex()))*0.01+(minus33(CL.toHex()))*0.0001;
             ui->readPortContent->setText(QString("%1").arg(A,0));
             qDebug()<<"get apparentPower data A "<<A<<endl;
             insertData(A,m_apparentPower.A,m_apparentPower.keys);
@@ -332,16 +335,16 @@ void Dialog::parseData()
             timeout->stop();
             QByteArray SL=buffer.mid(14,1);
             QByteArray SH=buffer.mid(15,1);
-            datatype S=(SH.toHex().toFloat()-33)*0.1+(SL.toHex().toFloat()-33)*0.001;
+            datatype S=(minus33(SH.toHex()))*0.1+(minus33(SL.toHex()))*0.001;
             QByteArray AL=buffer.mid(16,1);
             QByteArray AH=buffer.mid(17,1);
-            datatype A=(AH.toHex().toFloat()-33)*0.1+(AL.toHex().toFloat()-33)*0.001;
+            datatype A=(minus33(AH.toHex()))*0.1+(minus33(AL.toHex()))*0.001;
             QByteArray BL=buffer.mid(18,1);
             QByteArray BH=buffer.mid(19,1);
-            datatype B=(BH.toHex().toFloat()-33)*0.1+(BL.toHex().toFloat()-33)*0.001;
+            datatype B=(minus33(BH.toHex()))*0.1+(minus33(BL.toHex()))*0.001;
             QByteArray CL=buffer.mid(20,1);
             QByteArray CH=buffer.mid(21,1);
-            datatype C=(CH.toHex().toFloat()-33)*0.1+(CL.toHex().toFloat()-33)*0.001;
+            datatype C=(minus33(CH.toHex()))*0.1+(minus33(CL.toHex()))*0.001;
             ui->readPortContent->setText(QString("%1").arg(A,0));
             qDebug()<<"get powerFactor data A "<<A<<endl;
             insertData(A,m_powerFactor.A,m_powerFactor.keys);
@@ -583,13 +586,33 @@ void Dialog::updateGraph(dataToPlot &data)
     clearPlotData();
     ui->PlotA->graph()->addData(data.keys,data.A);
     ui->PlotB->graph()->addData(data.keys,data.B);
+    if(ui->radioButtonApparent->isChecked()||ui->radioButtonReactive->isChecked()||ui->radioButtonPowerFactor->isChecked()||ui->radioButtonEffective->isChecked())
+    {
+        ui->PlotC->graph()->addData(data.keys,data.S);
+    }
+    else
+    {
     ui->PlotC->graph()->addData(data.keys,data.C);
+    }
     ui->PlotA->yAxis->rescale();
     ui->PlotB->yAxis->rescale();
     ui->PlotC->yAxis->rescale();
     ui->PlotA->replot();
     ui->PlotB->replot();
     ui->PlotC->replot();
+}
+
+double Dialog::minus33(QByteArray data)
+{
+    double result=0;
+    QByteArray temp=data.mid(0,1);
+    bool ok;
+//    if(temp==Qbyt)
+    result+=10*(temp.toLong(&ok,16)-3);
+    temp=data.mid(1,1);
+    result+=temp.toLong(&ok,16)-3;
+    return result;
+
 }
 
 void Dialog::on_stopPlot_clicked()
